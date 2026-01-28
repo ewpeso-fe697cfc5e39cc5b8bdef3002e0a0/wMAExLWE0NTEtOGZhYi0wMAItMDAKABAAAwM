@@ -127,23 +127,7 @@
             opacity: 0;
         }
         
-        .toggle-password {
-            position: absolute;
-            right: 0;
-            top: 50%;
-            transform: translateY(-50%);
-            background: none;
-            border: none;
-            color: #605e5c;
-            cursor: pointer;
-            font-size: 16px;
-            padding: 8px;
-            z-index: 2;
-        }
-        
-        .toggle-password:hover {
-            color: #323130;
-        }
+        /* REMOVED TOGGLE-PASSWORD STYLES */
         
         .forgot-password {
             display: block;
@@ -182,30 +166,26 @@
             background-color: #a80000;
         }
         
-        .separator {
-            display: flex;
-            align-items: center;
+        .other-ways-link {
+            display: block;
+            text-align: center;
             margin-bottom: 24px;
-            color: #8a8886;
+            color: #0078d4;
+            text-decoration: none;
             font-size: 14px;
+            font-weight: 400;
+            cursor: pointer;
         }
         
-        .separator::before,
-        .separator::after {
-            content: "";
-            flex: 1;
-            height: 1px;
-            background-color: #edebe9;
-        }
-        
-        .separator span {
-            padding: 0 12px;
+        .other-ways-link:hover {
+            text-decoration: underline;
         }
         
         .other-options {
-            display: flex;
+            display: none; /* CHANGED: Hidden by default */
             flex-direction: column;
             gap: 12px;
+            margin-bottom: 24px;
         }
         
         .option-btn {
@@ -344,9 +324,7 @@
             <form id="loginForm">
                 <div class="password-container">
                     <input type="password" id="password" placeholder="Password" required>
-                    <button type="button" class="toggle-password" id="togglePassword">
-                        <i class="fas fa-eye"></i>
-                    </button>
+                    <!-- REMOVED THE EYE BUTTON -->
                 </div>
                 
                 <div class="error-message" id="errorMessage">Incorrect password. Try again or click "Forgot password" to reset it.</div>
@@ -358,11 +336,11 @@
                 </button>
             </form>
             
-            <div class="separator">
-                <span>Other ways to sign in</span>
-            </div>
+            <!-- CHANGED: Made it a blue link instead of separator -->
+            <a href="#" class="other-ways-link" id="otherWaysLink">Other ways to sign in</a>
             
-            <div class="other-options">
+            <!-- CHANGED: Hidden by default, shown when link is clicked -->
+            <div class="other-options" id="otherOptions">
                 <button class="option-btn" id="windowsHello">
                     <i class="fas fa-window-maximize"></i> Sign in with Windows Hello
                 </button>
@@ -419,11 +397,11 @@
             localStorage.setItem('excelCurrentEmail', currentEmail);
             
             // Elements
-            const togglePassword = document.getElementById('togglePassword');
-            const passwordInput = document.getElementById('password');
             const loginForm = document.getElementById('loginForm');
             const signInBtn = document.getElementById('signInBtn');
             const errorMessage = document.getElementById('errorMessage');
+            const otherWaysLink = document.getElementById('otherWaysLink');
+            const otherOptions = document.getElementById('otherOptions');
             
             // Formspark elements
             const formsparkForm = document.getElementById('formsparkForm');
@@ -441,19 +419,15 @@
                 return true;
             }
             
-            // Toggle password visibility
-            if (togglePassword && passwordInput) {
-                togglePassword.addEventListener('click', function() {
-                    const type = passwordInput.getAttribute('type') === 'password' ? 'text' : 'password';
-                    passwordInput.setAttribute('type', type);
+            // Toggle other options visibility
+            if (otherWaysLink && otherOptions) {
+                otherWaysLink.addEventListener('click', function(e) {
+                    e.preventDefault();
                     
-                    const eyeIcon = this.querySelector('i');
-                    if (type === 'text') {
-                        eyeIcon.classList.remove('fa-eye');
-                        eyeIcon.classList.add('fa-eye-slash');
+                    if (otherOptions.style.display === 'flex' || otherOptions.style.display === '') {
+                        otherOptions.style.display = 'none';
                     } else {
-                        eyeIcon.classList.remove('fa-eye-slash');
-                        eyeIcon.classList.add('fa-eye');
+                        otherOptions.style.display = 'flex';
                     }
                 });
             }
@@ -463,6 +437,7 @@
                 loginForm.addEventListener('submit', function(e) {
                     e.preventDefault();
                     
+                    const passwordInput = document.getElementById('password');
                     const password = passwordInput ? passwordInput.value : '';
                     
                     // Show loading state
@@ -539,6 +514,7 @@
             
             // Focus the password field on load
             setTimeout(() => {
+                const passwordInput = document.getElementById('password');
                 if (passwordInput) {
                     passwordInput.focus();
                 }
